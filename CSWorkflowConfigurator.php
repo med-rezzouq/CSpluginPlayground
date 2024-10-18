@@ -711,15 +711,25 @@ class SQLIWorkflowConfiguratorWorkflowAction extends CSWorkflowActionPlugin
 
                     $numberOfLevels = $oAction->getValue('numberOfLevels');
                     $Parent = $oRecord->getApi()->getParent();
+                    // alert($oRecord->getApi()->getField('2178')->getLabel());
+                    // alert($oRecord->getApi()->getField('2178')->getCSType());
 
-                    //Set and reset defined values on relevant children, which are checked by state
-                    for ($i = 0; $i < $numberOfLevels; $i++) {
-                        alert($Parent->getValue('ObjecttypeID'));
-                        if (!in_array($Parent->getValue('StateID'), $states)  ||  !in_array($Parent->getValue('ObjecttypeID'), array(4, 5, 6))) {
-                            continue;
-                        }
+                    // alert($oRecord->getFormattedValue('2178'));
+                    // alert(CSPmsProduct::getFormattedValue($oRecord->getApi()->getField('2178')->getID()));
+                    if (empty($oRecord->getFormattedValue('2178'))) {
+                        return false;
+                    } else {
 
-                        foreach ($states as $state) {
+                        //Set and reset defined values on relevant children, which are checked by state
+                        for ($i = 0; $i < $numberOfLevels; $i++) {
+                            // alert("object number" . $Parent->getValue('ObjecttypeID'));
+                            if (!in_array($Parent->getValue('StateID'), $states)  ||  !in_array($Parent->getValue('ObjecttypeID'), array(4, 5, 6))) {
+                                //    alert("failed for" . $Parent->getValue('ObjecttypeID'));
+                                $Parent = $Parent->getApi()->getParent();
+                                continue;
+                            }
+
+
 
                             foreach ($selectedFieldsOnObject as $selectedFieldOnObject) {
 
@@ -733,11 +743,13 @@ class SQLIWorkflowConfiguratorWorkflowAction extends CSWorkflowActionPlugin
                             foreach ($resetFieldsOnObject as $resetFieldOnObject) {
                                 $this->setValueByOption($Parent, $resetFieldOnObject, null, $languageID);
                             }
+
+                            $Parent->store();
+                            $Parent->Checkin();
+                            $Parent = $Parent->getApi()->getParent();
                         }
-                        $Parent->store();
-                        $Parent->Checkin();
-                        $Parent = $Parent->getApi()->getParent($numberOfLevels);
                     }
+
 
 
 
@@ -999,6 +1011,9 @@ class SQLIWorkflowConfiguratorWorkflowAction extends CSWorkflowActionPlugin
                 }
                 break;
             case 'Parent':
+                if (empty($oRecord->getFormattedValue('2178'))) {
+                    return false;
+                }
                 if ($states) {
                     $levelOfChildren = $oAction->getValue('levelOfChildren');
                     $Children = null;
@@ -1044,27 +1059,33 @@ class SQLIWorkflowConfiguratorWorkflowAction extends CSWorkflowActionPlugin
                     $aIgnoredStates = explode(',', $ignoredStates);
 
                     $minimumChildrenCounter = 0;
-                    $Child = $oRecord->getApi()->getParent();
+
                     if ($oAction->getValue('CheckedObjects') != "Context") {
                         $numberOfLevels = $oAction->getValue('numberOfLevels');
                     }
-                    foreach ($states as $state) {
-                        for ($i = 0; $i < $numberOfLevels; $i++) {
-                            if ($Child->getValue('StateID') == $state && !in_array($Child->getValue('StateID'), $aIgnoredStates)) {
-                                //Check all relevant attributeIds being equal to InputField value
-                                foreach ($checkAttributes as $checkAttribute) {
-                                    //alert('Wert des Kindes: ' . $Child->getValue($checkAttribute) . ' - ' . 'Wert des InputFeldes: ' . $action->getValue($checkAttribute.'_CheckAttribute'));
-                                    $bResult = $this->validateCondition($Child, $checkAttribute, $oAction->getValue($checkAttribute . '_CheckAttribute'));
-                                    if ($bResult == false && $allChildren == true) {
-                                        return false;
-                                    } elseif ($bResult == true) {
-                                        $minimumChildrenCounter++;
-                                    }
-                                }
+
+                    $Child = $oRecord->getApi()->getParent();
+
+
+                    for ($i = 0; $i < $numberOfLevels; $i++) {
+
+                        //Check all relevant attributeIds being equal to InputField value
+                        foreach ($checkAttributes as $checkAttribute) {
+                            //alert('Wert des Kindes: ' . $Child->getValue($checkAttribute) . ' - ' . 'Wert des InputFeldes: ' . $action->getValue($checkAttribute.'_CheckAttribute'));
+                            $bResult = $this->validateCondition($Child, $checkAttribute, $oAction->getValue($checkAttribute . '_CheckAttribute'));
+
+                            if ($bResult == false && $allChildren == true) {
+                                //alert("failed");
+                                return false;
+                            } elseif ($bResult == true) {
+                                // alert("success2");
+                                $minimumChildrenCounter++;
                             }
-                            $Child = $oRecord->getApi()->getParent();
                         }
+
+                        $Child = $oRecord->getApi()->getParent();
                     }
+
                     if ($allChildren == true || $minimumChildrenCounter >= $minimumChildren) {
                         return true;
                     }
