@@ -550,28 +550,28 @@ class SQLIWorkflowTransitionScript extends CSActiveScriptItemPlugin
     public  // this actually is not called
     function executeWorkflowPluginByLanguage($oContext, $iLanguageID, $sPlugin)
     {
-        $sLanguageFullName = CSLanguage::getLanguage($iLanguageID)->getFullName();
-        //Used to change data language to fetch available actions regarding to the given context.
-        $oContext->setDefaultLanguageID($iLanguageID);
+    //     $sLanguageFullName = CSLanguage::getLanguage($iLanguageID)->getFullName();
+    //     //Used to change data language to fetch available actions regarding to the given context.
+    //     $oContext->setDefaultLanguageID($iLanguageID);
 
-        //Very important, the instance has to be generation of the product AFTER the language has been changed, otherwise the pre-conditions may be wrong.
-        $oContext = CSPMS::getProduct($oContext->getID());
-        //getAvailableWorkflowActions already runs the MayExecute
-        $aWorkflowActions = $oContext->getAvailableWorkflowActions(false);
-        $bResult = false;
-        $sAction = 'N/A';
-        foreach ($aWorkflowActions as $oWorkflowAction) {
-            $definedPlugins = $oWorkflowAction->getDefinedPlugins();
-            foreach ($definedPlugins as $definedPlugin) {
-                if ($definedPlugin->getPluginName() == $sPlugin) {
-                    $bResult = $oContext->executeWorkflowAction($oWorkflowAction, false, 'Executed by ActiveScriptID: .' . $this->getPluginName());
-                    $sAction = $oWorkflowAction->getValue('ActionName');
-                    return $this->logContextResult($sLanguageFullName, $bResult, $sAction);
-                }
-            }
-        }
-        return $this->logContextResult($sLanguageFullName, $bResult, $sAction);
-    }
+    //     //Very important, the instance has to be generation of the product AFTER the language has been changed, otherwise the pre-conditions may be wrong.
+    //     $oContext = CSPMS::getProduct($oContext->getID());
+    //     //getAvailableWorkflowActions already runs the MayExecute
+    //     $aWorkflowActions = $oContext->getAvailableWorkflowActions(false);
+    //     $bResult = false;
+    //     $sAction = 'N/A';
+    //     foreach ($aWorkflowActions as $oWorkflowAction) {
+    //         $definedPlugins = $oWorkflowAction->getDefinedPlugins();
+    //         foreach ($definedPlugins as $definedPlugin) {
+    //             if ($definedPlugin->getPluginName() == $sPlugin) {
+    //                 $bResult = $oContext->executeWorkflowAction($oWorkflowAction, false, 'Executed by ActiveScriptID: .' . $this->getPluginName());
+    //                 $sAction = $oWorkflowAction->getValue('ActionName');
+    //                 return $this->logContextResult($sLanguageFullName, $bResult, $sAction);
+    //             }
+    //         }
+    //     }
+    //     return $this->logContextResult($sLanguageFullName, $bResult, $sAction);
+    // }
 
     /**
      * @return mixed
