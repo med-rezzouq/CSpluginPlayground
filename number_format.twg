@@ -1,0 +1,62 @@
+{# here is a macros i built to behave the same as number_format function from twig https://twig.symfony.com/doc/3.x/filters/number_format.html #}
+{# it is possible to transform it to any code language like php, javascript... example of usage _self.number_formatting('99999,54', 2 , '.', ',') #}
+
+
+{% macro number_formatting(value, decimals=0, decimalSep='.', thousandsSep=',') %}
+
+    {# Split input using ',' as decimal separator (always used in the input) #}
+    {% set parts = value|split(',') %}
+   {% set resultInt = '' %}
+   {% set resultDec = '' %}
+   {% set decVal = '' %}
+   
+   {% for i in 0..(decimals - 1)|int %}
+      {% set decVal = decVal ~ '0' %}
+      
+   {% endfor %}
+     {% do error(parts[1]|join('')|length) %}
+   
+    {# Integer part #}
+       {% set intPart = parts[0]|join('') %}
+    
+        {% if intPart|length > 3 %}
+            {% set count = 0 %}
+            {% for i in (intPart|split('')|length - 1) .. 0 %}
+                  
+                {% set resultInt = intPart|split('')[i]|join('') ~ resultInt %}
+                 
+                {% set count = count + 1 %}
+                {% if count % 3 == 0 and i != 0 %}
+                 
+                    {% set resultInt =  ',' ~ resultInt|string  %}
+                    
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            {% set resultInt = intPart %}
+        {% endif %}
+        
+        
+    {# Decimal part #}
+    
+     {% if parts|length > 0 %}
+     {% set decPart = parts[1]|join('') %}
+         {% if decPart|length > decimals|int %}
+          {% set resultDec = decimalSep ~ decPart|slice(0, decVal|length)|join('')      %}
+          {% do error('length '~decVal) %}
+         {% elseif decPart|length < decimals|int %}
+            {% set resultDec = decimalSep ~ decPart ~ decVal|slice(decPart|length, decVal|length)|join('')   %}
+         {% elseif decPart|length == decimals|int %}
+             {% set resultDec = decimalSep ~ decPart %}
+         {% endif %}  
+          
+      {% else %}
+          {% set resultDec = decVal %}
+         
+     {% endif %}
+     
+    {% do error( resultInt ~ resultDec) %}
+    
+     
+    {% return resultInt ~ resultDec   %}
+{% endmacro %}
